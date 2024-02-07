@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plaid Client</title>
+</head>
+
+<body>
+  <button id="linkButton">Invoke Plaid Link</button>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <script>
+    async function invokePlaidLink() {
+      try {
+        const linkTokenResponse = await axios.post("http://localhost:4000/create-link-token");
+        const { link_token } = linkTokenResponse.data;
+
+        if (!link_token) throw new Error("link_token failed");
+
+        var linkHandler = Plaid.create({
+          // Make a request to your server to fetch a new link_token.
+          token: link_token,
+          onSuccess: function (public_token, metadata) {
+            // The onSuccess function is called when the user has successfully
+            // authenticated and selected an account to use.
+            //
+            // When called, you will send the public_token and the selected accounts,
+            // metadata.accounts, to your backend app server.
+            sendDataToBackendServer({
+              public_token: public_token,
+              accounts: metadata.accounts
+            });
+          },
+          onExit: function (err, metadata) {
+            // The user exited the Link flow.
+            if (err != null) {
+              // The user encountered a Plaid API error prior to exiting.
+            }
+            // metadata contains information about the institution
+            // that the user selected and the most recent API request IDs.
+            // Storing this information can be helpful for support.
+          },
+        });
+
+        // Link will automatically detect the institution ID
+        // associated with the public token and present the
+        // credential view to your user.
+        linkHandler.open();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // Trigger the authentication view
+    document.getElementById('linkButton').onclick = async function () {
+      await invokePlaidLink();
+    };
+  </script>
+</body>
+
+</html>
