@@ -7,6 +7,8 @@ import morgan from "morgan";
 
 dotenv.config();
 
+const plaidUrl = "https://sandbox.plaid.com";
+
 const app = express();
 app.use(cors({ origin: "*" }));
 app.use(bodyParser.json());
@@ -18,7 +20,7 @@ app.get("/", function (request, response) {
 
 app.post("/create-link-token", async function (request, response) {
   const plaidResponse = await axios.post(
-    "https://sandbox.plaid.com/link/token/create",
+    [plaidUrl, "/link/token/create"].join("/"),
     {
       "client_id": process.env.PLAID_CLIENT_ID,
       "secret": process.env.PLAID_CLIENT_SECRET,
@@ -28,7 +30,8 @@ app.post("/create-link-token", async function (request, response) {
       "country_codes": ["US"],
       "language": "en",
       "webhook": "https://webhook.example.com",
-      "redirect_uri": process.env.PLAID_REDIRECT_URI
+      // "redirect_uri": process.env.PLAID_REDIRECT_URI
+      "redirect_uri": "https://useferry.retool.com/editor/eb69866e-b538-11ee-9ce9-d71eab21d3e1/Sandbox%20-%20Plaid%20Integration"
     }
   );
 
@@ -45,7 +48,7 @@ app.post("/create-processor-token", async function (request, response) {
 
   try {
     const accessTokenResponse = await axios.post(
-      "https://sandbox.plaid.com/item/public_token/exchange",
+      [plaidUrl, "/item/public_token/exchange"].join("/"),
       {
         "client_id": process.env.PLAID_CLIENT_ID,
         "secret": process.env.PLAID_CLIENT_SECRET,
@@ -66,7 +69,7 @@ app.post("/create-processor-token", async function (request, response) {
     console.log(processorTokenRequestBody);
 
     const processorTokenResponse = await axios.post(
-      "https://sandbox.plaid.com/processor/token/create",
+      [plaidUrl, "/processor/token/create"].join("/"),
       processorTokenRequestBody
     );
 
