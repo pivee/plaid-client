@@ -1,10 +1,16 @@
-import express from "express";
 import axios from "axios";
+import * as bodyParser from "body-parser";
+import cors from "cors";
 import * as dotenv from "dotenv";
+import express from "express";
+import morgan from "morgan";
 
 dotenv.config();
 
 const app = express();
+app.use(cors({ origin: "*" }));
+app.use(bodyParser.json());
+app.use(morgan("dev"));
 
 app.get("/", function (request, response) {
   response.json({ message: "Hello World!" });
@@ -27,6 +33,48 @@ app.post("/create-link-token", async function (request, response) {
   );
 
   response.json({ link_token: plaidResponse.data?.link_token });
+});
+
+app.post("/create-processor-token", async function (request, response) {
+  console.log("✅ Exchange token");
+
+  console.log(request.body);
+
+  const publicToken = request.body?.public_token;
+  const accountId = request.body?.accounts[0]?.id;
+
+  try {
+    const accessTokenResponse = await axios.post(
+      "https://sandbox.plaid.com/item/public_token/exchange",
+      {
+        "client_id": process.env.PLAID_CLIENT_ID,
+        "secret": process.env.PLAID_CLIENT_SECRET,
+        "public_token": publicToken
+      }
+    );
+
+    // Get access_token from public_token
+
+    const processorTokenRequestBody = {
+      "client_id": process.env.PLAID_CLIENT_ID,
+      "secret": process.env.PLAID_CLIENT_SECRET,
+      "access_token": accessTokenResponse.data?.access_token,
+      "account_id": accountId,
+      "processor": "highnote"
+    };
+
+    console.log(processorTokenRequestBody);
+
+    const processorTokenResponse = await axios.post(
+      "https://sandbox.plaid.com/processor/token/create",
+      processorTokenRequestBody
+    );
+
+    response.json({ processorTokenResponse: processorTokenResponse.data });
+  } catch (error) {
+    console.error(error);
+    response.sendStatus(500);
+  }
 });
 
 app.listen(4000, function () { console.log("🚀 Server is running..."); });
