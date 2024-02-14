@@ -30,8 +30,7 @@ app.post("/create-link-token", async function (request, response) {
       "country_codes": ["US"],
       "language": "en",
       "webhook": "https://webhook.example.com",
-      // "redirect_uri": process.env.PLAID_REDIRECT_URI
-      "redirect_uri": "https://useferry.retool.com/editor/eb69866e-b538-11ee-9ce9-d71eab21d3e1/Sandbox%20-%20Plaid%20Integration"
+      "redirect_uri": process.env.PLAID_REDIRECT_URI
     }
   );
 
